@@ -1,66 +1,54 @@
-import React, { useState } from "react";
-import { Text, Button, View, TextInput } from 'react-native';
+import React, { Component } from 'react';
+import { Text, View, AsyncStorage } from 'react-native';
+import MapView from 'react-native-maps';
 
-export default function App() {
-  const [showLogin, setShowLogin] = useState(false)
-  const [showRegister, setShowRegister] = useState(false)
+export default class HomeScreen extends Component {
+  constructor(props) {
+    super(props);
 
-  const login = () => {
-    setShowLogin(!showLogin);
+    this.state = {
+      latitude: 0,
+      longitude: 0,
+      error: '',
+    };
   }
-  const register = () => {
-    setShowRegister(!showRegister);
+
+  gatherLocations() {
+    this.watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        this.setState({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        });
+      },
+      (error) => {
+        this.setState({
+          error,
+        });
+      },
+      { distanceFilter: 100 }
+    );
   }
-  return (
-    <View>
-      <Button
-      onPress={() => {
-        login();
-      }}
-      color="blue"
-      title="LOGIN"
-      />
-        {showLogin && 
-        <View>
-          <Text>Login</Text>
-          <TextInput
-            style={{
-              height: 40,
-              borderColor: 'gray',
-              borderWidth: 1
-            }}
-          defaultValue="Name"
-          />
-        </View>
-       } 
-      <Button
-      onPress={() => {
-        register();
-      }}
-      color="blue"
-      title="REGISTER"
-      />
-        {showRegister && 
-          <View>
-           <Text>Register</Text>
-            <TextInput
-               style={{
-                height: 40,
-                borderColor: 'gray',
-                borderWidth: 1
-                }}
-             defaultValue="Name"
-            />
-          </View>
-        }
-     </View>
-  );
 
+  sendDataToApi() {
+    const userToken = AsyncStorage.getItem('userToken');
+    this.gatherLocations();
+    fetch('/api/set_location', {
+      method: 'post',
+      mode: 'no-cors',
+      headers: {
+        'Content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        lat: this.state.latitude,
+        lon: this.state.longitude,
+        date: Date.now(),
+        user_token: userToken,
+      }),
+    });
+  }
 
+  render() {
+    return <MapView />;
+  }
 }
-
-
-
-
-
-
