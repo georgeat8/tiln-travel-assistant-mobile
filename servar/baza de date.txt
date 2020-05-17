@@ -1,0 +1,19 @@
+
+CREATE DATABASE TILNDB;
+
+\c tilndb;
+
+CREATE TABLE USERS(   
+    ID             SERIAL      PRIMARY KEY     NOT NULL,
+    EMAIL          TEXT                     NOT NULL,
+    Password       CHAR(512)                NOT NULL
+      );
+
+CREATE TABLE PLACES(
+    USER_ID INT NOT NULL,
+    LAT FLOAT NOT NULL,
+    LON FLOAT NOT NULL,
+    PLACE_NAME TEXT NOT NULL,
+    DATE DATE NOT NULL,
+    FOREIGN KEY (USER_ID) REFERENCES USERS (ID)
+);

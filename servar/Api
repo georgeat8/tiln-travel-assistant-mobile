@@ -1,0 +1,66 @@
+La register o sa avem 3 campuri 
+
+1 Email
+2 Password
+3 Re-Password
+
+
+
+Iar la login o sa avem 2 
+
+1 Email
+2 Password
+
+
+
+
+/api/register
+Verificarea parolelor se face inainte de trimitere + hash 
+{
+    email:"email",
+    password:"password"
+}
+
+Raspuns: 
+    succes => {message:"succes"}
+    faile => {message:"faile"}
+
+
+/api/login
+{
+    email:"email",
+    password:"password"
+}
+Raspuns: 
+    succes => {
+        message:"succes",
+        token:"token"
+    }
+    faile => {message:"faile"}
+
+/api/set_location
+
+{
+    lat:latitude,
+    lon:longitude,
+    date:Date.now(),
+    user_token:token
+}
+
+Raspuns:
+    succes => {message:"succes"}
+    faile => {message:"faile db connection "||"Invalid data"}
+
+/api/send_vocal
+
+Audio raw_data
++user_token
+
+Raspuns:
+
+    succes{message:success,
+    data:audio raw data}
+    faile:{
+        message:"faile"
+    }
+
