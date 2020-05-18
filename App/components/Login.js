@@ -43,16 +43,20 @@ export default class App extends Component {
           password: password,
         }),
       })
-      .then(resp => resp.json())
-      .then(data => try {
-        AsyncStorage.setItem('userToken', data.token);
-      } catch (error) {
-        console.log(error);
-      }
+        .then(resp => resp.json())
+        .then(data => {
+          try {
+            AsyncStorage.setItem('userToken', data.token);
+          } catch (error) {
+            console.log(error);
+          }
+        }
+        )
     } catch (error) {
       console.log(error);
     }
   }
+
 
   render() {
     return (
