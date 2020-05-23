@@ -8,7 +8,8 @@ import dateparser
 import io
 from nltk.corpus import stopwords
 import nltk
-
+import copy
+import inspect
 
 def register(email, password, cursor, con):
     cursor.execute("SELECT * FROM users WHERE email=%s;", (email,))
@@ -100,8 +101,10 @@ def exit_handler(cursor, con):
 
 
 def convert_mp3_to_wav(path, name):
-    sound = AudioSegment.from_mp3("{}/{}.mp3".format(path, name))
-    sound.export("{}/{}.wav".format(path, name), format="wav")
+    location=os.path.join(os.path.abspath('.'),"Uploads",name+".mp3")
+    sound = AudioSegment.from_mp3(location)
+    dest="{}/{}.wav".format(path, name)
+    sound.export(dest, format="wav")
 
 
 def create_mp3_from_text(text, path, name):
@@ -109,9 +112,9 @@ def create_mp3_from_text(text, path, name):
     myobj.save("{}/{}.mp3".format(path, name))
 
 
-def get_text_from_audio(path_to_audio):
+def get_text_from_audio(path_to_audio,name):
     r = sr.Recognizer()
-    with sr.AudioFile("./data.wav") as source:
+    with sr.AudioFile("./{}/{}.wav".format(path_to_audio,name)) as source:
         audio = r.listen(source, phrase_time_limit=5)
     try:
         propozitie = r.recognize_google(audio, language='ro-RO')
@@ -135,8 +138,10 @@ def get_text_from_audio(path_to_audio):
 def parse_phrase(phrase):
     stop_words = set(stopwords.words("romanian"))
     other_words = ["ora", "Unde"]
+    prop=replace(phrase["phrase"])
+    
+    words = nltk.word_tokenize(prop)
 
-    words = nltk.word_tokenize(phrase)
     without_stop_words = [
         word for word in words if (not word in stop_words)]
     without_stop_words = [
@@ -146,8 +151,105 @@ def parse_phrase(phrase):
     for i in without_stop_words:
         prop += " "+i
     prop = prop.strip()
+    return prop
 
 
-def get_time(prop):
-    h = dateparser.parse(prop, languages=['ro'])
-    return h
+def get_time(ask_for_time):
+    h = dateparser.parse(ask_for_time, languages=['ro'])
+    print(h)
+    if h!=None:
+        return h.strftime("%m/%d/%Y"),h.strftime("%H:%M:%S")
+    else:
+        return None
+
+def calcuate_time_dif(bd_time, time):
+    # time=time.split(":")
+    bd_time=bd_time.strftime("%H:%M:%S")
+    db_t=bd_time.split(":")
+    t=time.split(":")
+    for i in range(3):
+        db_t[i]=int(db_t[i])
+        t[i]=int(t[i])
+    result=[]
+    result.append(abs(db_t[0]-t[0])*(10**2))
+    result.append(abs(db_t[1]-t[1]))
+    return sum(result)
+
+def get_location_for_time(dates,ask_time):
+    info=None
+    closest=float('Inf')
+    for i in dates:
+        time_dist=calcuate_time_dif(i[4],ask_time)
+        if closest>time_dist:
+            info=i
+            closest=time_dist
+    return info
+
+def get_data_from_database(cursor,date,user_id):
+    cursor.execute("SELECT * FROM places where date_trunc('day', date) =%s and user_id=%s;",(date,user_id))
+    data=cursor.fetchall()
+    return data
+# SELECT * FROM places where date_trunc('day', date) ='2020-05-14';
+
+
+def from_text_to_location(user_id,parsed_phrase,cursor):
+    # print(parsed_phrase)
+    time=get_time(parsed_phrase)
+    # print(time)
+    if time!=None:
+        date,time=time
+        db_infos=get_data_from_database(cursor,date,user_id)
+        return get_location_for_time(db_infos,time)
+    else:
+        return None 
+
+def generate_answer(path,name,uid,cursor):
+    convert_mp3_to_wav(path,name)
+    text=get_text_from_audio(path,name)
+    parsed_phrase=parse_phrase(text)
+    # pr    int(type(parsed_phrase))
+    # print(type("parsed_phrase"))
+    text_parse=copy.deepcopy(parsed_phrase)
+    texting="acum 9 zile"
+
+    # print(inspect.getmembers(text_parse))
+    list_of_attr=inspect.getmembers(text_parse)
+    list_of_attr1=inspect.getmembers(texting)
+    # print(list_of_attr)
+    print(texting.__delattr__)
+    print(text_parse.__delattr__)
+    
+    
+    # open("file1","w+").write(" ".join(list_of_attr))
+    # open("file2","w+").write(" ".join(list_pf_attr1))
+    location=from_text_to_location(uid,texting,cursor)
+    if location!=None:
+        # Are data 
+        # print(location)
+        return location
+    else:
+        # Nu are data doar locatie 
+        # print(location)
+        return location
+
+def replace(phrase):
+    to_change=[
+        ["un an","1 an"],
+        ["o luna"," luna"],
+        ["o saptamana","1 saptamana"],
+        ["o zi","1 zi"],
+        ["o ora","1 ora"],
+
+        ['două',"2"],
+        ['trei',"3"],
+        ["patru","4"],
+        ["cinci","5"],
+        ["șase","6"],
+        ["șapte","7"],
+        ["opt","8"],
+        ["nouă","9"],
+        ["zece",'10']
+            ]
+    for i in to_change:
+        phrase=phrase.replace(i[0],i[1])
+    return phrase

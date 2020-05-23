@@ -19,3 +19,39 @@ CREATE TABLE PLACES(
 );
 
 insert into users(email,password) values('gatucristian@gmail.com','parola');
+insert into users(email,password) values('gatucristian2@gmail.com','password');
+
+
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1616,27.564,'Alexandru cel Bun',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1611,27.565,'Tatarasi',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1612,27.566,'Podul de fier',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1613,27.567,'Piata Unirii',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Dacia',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1615,27.569,'Zimbru',NOW());
+
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Alexandru cel bun','2020-05-22 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Tatarasi','2020-05-21 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Podul','2020-05-20 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Piata','2020-05-18 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Dacia','2020-05-2 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(2,47.1614,27.568,'Zimbru','2020-05-14 17:07:02.000000');
+
+
+
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1616,27.564,'Alexandru cel Bun',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1611,27.565,'Tatarasi',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1612,27.566,'Podul de fier',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1613,27.567,'Piata Unirii',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Dacia',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1615,27.569,'Zimbru',NOW());
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Alexandru cel bun','2020-05-22 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Tatarasi','2020-05-21 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Podul','2020-05-20 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Piata','2020-05-18 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Dacia','2020-05-2 17:07:02.000000');
+INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Zimbru','2020-05-14 17:07:02.000000');
+
+
+Select by a specific day 
+SELECT * FROM places where date_trunc('day', date) ='2020-05-14';
+date_trunc('day', dt) =
