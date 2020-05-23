@@ -1,0 +1,10 @@
+System Files:
+    FFmpeg 
+    before use
+# AudioSegment.converter = "C:/ffmpeg/bin/ffmpeg.exe"
+py modules:
+    gtts
+    pydub
+    nltk
+    dateparser
+    speech_recodnition

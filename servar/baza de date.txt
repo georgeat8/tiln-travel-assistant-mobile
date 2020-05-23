@@ -14,6 +14,8 @@ CREATE TABLE PLACES(
     LAT FLOAT NOT NULL,
     LON FLOAT NOT NULL,
     PLACE_NAME TEXT NOT NULL,
-    DATE DATE NOT NULL,
+    DATE TIMESTAMP NOT NULL,
     FOREIGN KEY (USER_ID) REFERENCES USERS (ID)
 );
+
+insert into users(email,password) values('gatucristian@gmail.com','parola');
