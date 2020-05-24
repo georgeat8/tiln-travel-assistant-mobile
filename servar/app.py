@@ -52,13 +52,13 @@ def save_location():
 def test_get_data():
     if request.method == "POST":
         if 'file' not in request.files:
-            return {"message": "faile",
+            return {"message": "failed",
                     "error": "No file"}
         file = request.files['file']
         # if user does not select file, browser also
         # submit an empty part without filename
         if file.filename == '':
-            return {"message": "faile",
+            return {"message": "failed",
                     "error": "No name"}
         if file:
             filename = secure_filename(file.filename)
@@ -84,8 +84,8 @@ if __name__ == "__main__":
                            password="parola",
                            host="127.0.0.1",
                            port="5432",
-                           database="tilndb")
+                           database="TILNDB")
     cursor = con.cursor()
 
-    app.run(debug=True)
+    app.run(debug=True, host="192.168.0.111")
     atexit.register(exit_handler, cursor, con)

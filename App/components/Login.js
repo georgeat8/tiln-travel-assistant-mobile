@@ -1,5 +1,13 @@
 import React, { Component } from 'react';
-import { Alert, AsyncStorage, Button, TextInput, Text, View, StyleSheet } from 'react-native';
+import {
+  Alert,
+  AsyncStorage,
+  Button,
+  TextInput,
+  Text,
+  View,
+  StyleSheet,
+} from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
@@ -25,38 +33,36 @@ export default class App extends Component {
     this.state = {
       username: 'username',
       password: 'password',
-      token: ''
+      token: '',
+      data: null,
+      error: null,
     };
   }
 
   onLogin() {
-    const { username, password } = this.state;
-    try {
-      fetch('/api/login', {
-        method: 'post',
-        mode: 'no-cors',
-        headers: {
-          'Content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: username,
-          password: password,
-        }),
-      })
-        .then(resp => resp.json())
-        .then(data => {
-          try {
-            AsyncStorage.setItem('userToken', data.token);
-          } catch (error) {
-            console.log(error);
-          }
+    fetch('http://192.168.0.111:5000/api/login', {
+      method: 'post',
+      mode: 'no-cors',
+      headers: {
+        'Content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: this.state.username,
+        password: this.state.password,
+      }),
+    })
+      .then((resp) => resp.json())
+      .then((data) => {
+        try {
+          Alert.alert(data.message);
+          AsyncStorage.setItem('userToken', data.token);
+          AsyncStorage.setItem('loggedIn', 'true');
+        } catch (error) {
+          Alert.alert(error.error);
+          console.log(error);
         }
-        )
-    } catch (error) {
-      console.log(error);
-    }
+      });
   }
-
 
   render() {
     return (
@@ -75,7 +81,7 @@ export default class App extends Component {
           style={styles.input}
         />
         <Button
-          title={'Login'}
+          title={'LoginTest'}
           style={styles.input}
           onPress={this.onLogin.bind(this)}
         />
