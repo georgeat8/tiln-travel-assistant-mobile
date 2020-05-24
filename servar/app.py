@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import psycopg2
-from functions import register, generate_key, login, save_place, exit_handler, decode
+from functions import register, generate_key, login, save_place, exit_handler, decode, response_to_location_request
 import atexit
 import os
 from werkzeug.utils import secure_filename
@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = './Uploads'
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 @app.route('/')
 def index():
@@ -50,32 +51,32 @@ def save_location():
 @app.route('/test_get_data', methods=["POST"])
 def test_get_data():
     if request.method == "POST":
-    #     if request.is_json:
-    #         return jsonify(save_place(request.json["token"], request.json["data"], cursor, con))
-    # return jsonify({"message": "succes"})
-     # check if the post request has the file part
         if 'file' not in request.files:
-            return {"message":"faile",
-            "error":"No file"}
+            return {"message": "faile",
+                    "error": "No file"}
         file = request.files['file']
         # if user does not select file, browser also
         # submit an empty part without filename
         if file.filename == '':
-            return {"message":"faile",
-            "error":"No name"}
+            return {"message": "faile",
+                    "error": "No name"}
         if file:
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return {"message":"success",
-            "status":"Save successfuly"}
+            file.save(os.path.join(
+                app.config['UPLOAD_FOLDER'], "data{}".format(request.json["token"])))
+            # return {"message":"success",
+            # "status":"Save successfuly"}
 
 
 @app.route('/test', methods=["GET"])
 def test():
-    # if request.method == "POST":
-    #     if request.is_json:
-    #         return jsonify(save_place(request.json["token"], request.json["data"], cursor, con))
     return jsonify({"message": "succes"})
+
+
+@app.route("/get_info", methods=["POST"])
+def get_image():
+    if request.method == "POST":
+        return response_to_location_request(request, cursor)
 
 
 if __name__ == "__main__":

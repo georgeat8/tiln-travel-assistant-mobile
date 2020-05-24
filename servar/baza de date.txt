@@ -1,3 +1,5 @@
+drop table places;
+drop table users;
 
 CREATE DATABASE TILNDB;
 
@@ -5,7 +7,7 @@ CREATE DATABASE TILNDB;
 
 CREATE TABLE USERS(   
     ID             SERIAL      PRIMARY KEY     NOT NULL,
-    EMAIL          TEXT                     NOT NULL,
+    EMAIL          TEXT                   NOT NULL,
     Password       CHAR(512)                NOT NULL
       );
 
@@ -55,3 +57,9 @@ INSERT INTO places (user_id,lat,lon,place_name,date) VALUES(1,47.1614,27.568,'Zi
 Select by a specific day 
 SELECT * FROM places where date_trunc('day', date) ='2020-05-14';
 date_trunc('day', dt) =
+
+
+
+
+select * from places;
+select * from users;

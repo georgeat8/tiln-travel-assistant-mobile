@@ -10,6 +10,12 @@ from nltk.corpus import stopwords
 import nltk
 import copy
 import inspect
+from string import Template
+from random import choice
+import datetime as dt
+from datetime import date, datetime
+from flask import request, jsonify, send_from_directory, abort
+from werkzeug.utils import secure_filename
 
 
 def register(email, password, cursor, con):
@@ -41,8 +47,8 @@ def login(email, password, cursor, con):
         """
         try:
             payload = {
-                'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1),
-                'iat': datetime.datetime.utcnow(),
+                'exp': dt.datetime.utcnow() + dt.timedelta(days=1),
+                'iat': dt.datetime.utcnow(),
                 'sub': data[0][0]
             }
             token = jwt.encode(
@@ -109,8 +115,11 @@ def convert_mp3_to_wav(path, name):
 
 
 def create_mp3_from_text(text, path, name):
+    path = os.path.join(os.path.abspath("."), "Uploads",
+                        "{}.mp3".format(name))
     myobj = gTTS(text=text, lang='ro', slow=False)
-    myobj.save("{}/{}.mp3".format(path, name))
+    myobj.save(path.format(path, name))
+    return path
 
 
 def get_text_from_audio(path_to_audio, name):
@@ -163,6 +172,10 @@ def get_time(ask_for_time):
         return None
 
 
+def create_time_for_phrase(data_time):
+    return data_time.strftime("%m/%d/%Y %H:%M")
+
+
 def calcuate_time_dif(bd_time, time):
 
     bd_time = bd_time.strftime("%H:%M:%S")
@@ -196,6 +209,13 @@ def get_data_from_database(cursor, date, user_id):
 # SELECT * FROM places where date_trunc('day', date) ='2020-05-14';
 
 
+def select_by_location(cursor, user_id):
+    cursor.execute(
+        "SELECT * FROM places where user_id=%s order by date desc;", (user_id,))
+    data = cursor.fetchall()
+    return data
+
+
 def from_text_to_location(user_id, parsed_phrase, cursor):
 
     time = get_time(parsed_phrase)
@@ -208,23 +228,56 @@ def from_text_to_location(user_id, parsed_phrase, cursor):
         return None
 
 
+def create_phrase(data, locatie):
+    adv_timp = ["In data de", "Pe data de", "Pe", "La data de", "La"]
+
+    verbe = ["ai fost la", "ai mers la", "te-ai aflat la",
+             "te aflai la", "erai prezent la", "erai la"]
+
+    s = Template('$adv $date, $action $location.')
+    time = date.today().strftime("%m/%d/%Y")
+    if(time in data):
+        return (s.substitute(adv=choice((adv_timp)+["Astazi"]), date=data, action=choice(verbe), location=locatie))
+    else:
+        return (s.substitute(adv=choice(adv_timp), date=data, action=choice(verbe), location=locatie))
+
+
 def generate_answer(path, name, uid, cursor):
     convert_mp3_to_wav(path, name)
     text = get_text_from_audio(path, name)
     parsed_phrase = parse_phrase(text)
 
     text_parse = copy.deepcopy(parsed_phrase)
-    texting = "acum 10 zile"
+    # texting = "acum 10 zile"
 
-    location = from_text_to_location(uid, texting, cursor)
+    location = from_text_to_location(uid, text_parse, cursor)
     if location != None:
         # Are data
-        # print(location)
-        return location
+        date = location[4]
+        locatie = location[3]
+        time_and_date = create_time_for_phrase(date)
+        result = create_phrase(time_and_date, locatie)
+        path = create_mp3_from_text(
+            result, "./Uploads", "data{}".format(uid))
+        return path
     else:
-        # Nu are data doar locatie
-        # print(location)
-        return location
+        data = select_by_location(cursor, uid)
+        zona = None
+        for i in data:
+            if i[3].lower() in text["phrase"]:
+                zona = i
+                break
+        result = ''
+        if zona != None:
+            date = zona[4]
+            locatie = zona[3]
+            time_and_date = create_time_for_phrase(date)
+            result = create_phrase(time_and_date, locatie)
+        else:
+            result = "Nu am gasit nimic in istoricul tau"
+        path = create_mp3_from_text(
+            result, "./Uploads", "data{}".format(uid))
+        return path
 
 
 def replace(phrase):
@@ -248,3 +301,29 @@ def replace(phrase):
     for i in to_change:
         phrase = phrase.replace(i[0], i[1])
     return phrase
+
+
+def response_to_location_request(request, cursor):
+    if 'file' not in request.files:
+        return {"message": "faile",
+                "error": "No file"}
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        return {"message": "faile",
+                "error": "No name"}
+    if file:
+        filename = secure_filename(file.filename)
+        path_of_save = os.path.join(
+            "./Uploads")
+        print(request.headers)
+        uid = decode(request.headers["Authorization"])
+        name = "data{}".format(uid)
+        file.save(os.path.join(path_of_save, name+".mp3"))
+        path_of_result = generate_answer(path_of_save, name, uid, cursor)
+
+        try:
+            return send_from_directory(path_of_save, filename=name+".mp3", as_attachment=True)
+        except FileNotFoundError:
+            abort(404)
