@@ -169,6 +169,22 @@ export default class Record extends React.Component {
     console.log(fileURI);
     const info = await FileSystem.getInfoAsync(fileURI);
     console.log(`FILE INFO: ${JSON.stringify(info)}`);
+    let formData = new FormData();
+    formData.append('file', info);
+    try {
+      let response = await axios.post(
+        'http://192.168.0.111:5000/api/get_info',
+        formData,
+        {
+          mode: 'no-s',
+          headers: {
+            'Content-type': 'multipart/form-data',
+          },
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
     await Audio.setAudioModeAsync({
       allowsRecordingIOS: false,
       interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
@@ -211,30 +227,7 @@ export default class Record extends React.Component {
     //   } else {
     //     this.sound.playAsync();
     //   }
-    // }
-    const fileURI = this.recording.getURI();
-    const info = await FileSystem.getInfoAsync(fileURI);
-
-    let formData = new FormData();
-
-    formData.append('file', info);
-
-    try {
-      let response = await axios.post(
-        'http://192.168.0.111:5000/api/get_info',
-        formData,
-        {
-          mode: 'no-cors',
-          headers: {
-            'Content-type': 'multipart/form-data',
-          },
-        }
-      );
-
-      Alert.alert(response.file);
-    } catch (err) {
-      console.log(err);
-    }
+    //
 
     const soundObject = new Audio.Sound();
     try {
