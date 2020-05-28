@@ -10,7 +10,9 @@ import {
   Text,
   TouchableHighlight,
   View,
+  Alert,
 } from 'react-native';
+import axios from 'axios';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const RecordIcon = <MaterialCommunityIcon size={25} name={'record-rec'} />;
@@ -210,6 +212,29 @@ export default class Record extends React.Component {
     //     this.sound.playAsync();
     //   }
     // }
+    const fileURI = this.recording.getURI();
+    const info = await FileSystem.getInfoAsync(fileURI);
+
+    let formData = new FormData();
+
+    formData.append('file', info);
+
+    try {
+      let response = await axios.post(
+        'http://192.168.0.111:5000/api/get_info',
+        formData,
+        {
+          mode: 'no-cors',
+          headers: {
+            'Content-type': 'multipart/form-data',
+          },
+        }
+      );
+
+      Alert.alert(response.file);
+    } catch (err) {
+      console.log(err);
+    }
 
     const soundObject = new Audio.Sound();
     try {
