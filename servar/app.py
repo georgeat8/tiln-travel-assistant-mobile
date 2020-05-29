@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, abort
 import psycopg2
 from functions import register, generate_key, login, save_place, exit_handler, decode, response_to_location_request
 import atexit
@@ -8,16 +8,6 @@ from werkzeug.utils import secure_filename
 UPLOAD_FOLDER = './Uploads'
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-
-@app.route('/')
-def index():
-    return 'Index Page'
-
-
-@app.route('/hello')
-def hello():
-    return 'Hello, World'
 
 
 @app.route('/api/register', methods=["POST"])
@@ -48,35 +38,18 @@ def save_location():
             return jsonify(save_place(request.json["token"], request.json["data"], cursor, con))
 
 
-@app.route('/test_get_data', methods=["POST"])
-def test_get_data():
-    if request.method == "POST":
-        if 'file' not in request.files:
-            return {"message": "failed",
-                    "error": "No file"}
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            return {"message": "failed",
-                    "error": "No name"}
-        if file:
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(
-                app.config['UPLOAD_FOLDER'], "data{}".format(request.json["token"])))
-            # return {"message":"success",
-            # "status":"Save successfuly"}
-
-
-@app.route('/test', methods=["GET"])
-def test():
-    return jsonify({"message": "succes"})
-
-
 @app.route("/get_info", methods=["POST"])
 def get_image():
     if request.method == "POST":
         return response_to_location_request(request, cursor)
+
+
+@app.route("/get_info/<sound_name>")
+def get_sound(sound_name):
+    try:
+        return send_from_directory("./Uploads", filename=sound_name, as_attachment=False)
+    except FileNotFoundError:
+        abort(404)
 
 
 if __name__ == "__main__":

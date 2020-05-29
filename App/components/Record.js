@@ -2,6 +2,7 @@ import React from 'react';
 import { Audio } from 'expo-av';
 import * as Permissions from 'expo-permissions';
 import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import {
   Dimensions,
   Image,
@@ -11,8 +12,10 @@ import {
   TouchableHighlight,
   View,
   Alert,
+  AsyncStorage,
 } from 'react-native';
 import axios from 'axios';
+// import { saveAs } from 'file-saver';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const RecordIcon = <MaterialCommunityIcon size={25} name={'record-rec'} />;
@@ -170,18 +173,32 @@ export default class Record extends React.Component {
     const info = await FileSystem.getInfoAsync(fileURI);
     console.log(`FILE INFO: ${JSON.stringify(info)}`);
     let formData = new FormData();
-    formData.append('file', info);
+    const token = AsyncStorage.getItem('userToken');
+    formData.append('file', {
+      uri: info.uri,
+      name: 'TestRecord.m4a',
+      type: Blob,
+    });
+    // console.log('Form data is: ', formData);
+    console.log(formData);
+    console.log(info);
+    console.log(token);
+    let file = null;
     try {
       let response = await axios.post(
-        'http://192.168.0.111:5000/api/get_info',
+        'http://192.168.0.111:5000/get_info',
         formData,
         {
-          mode: 'no-s',
+          responseType: 'blob',
+          mode: 'no-cors',
           headers: {
+            Authorization:
+              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1OTA3Nzg5NjAsImlhdCI6MTU5MDY5MjU2MCwic3ViIjoxfQ.W78G_Rn3PhpTm0OISjWg9-OxvyRSsOzscc-E8odlCgo',
             'Content-type': 'multipart/form-data',
           },
         }
       );
+      console.log(typeof response.data);
     } catch (err) {
       console.log(err);
     }
@@ -205,7 +222,10 @@ export default class Record extends React.Component {
       },
       this._updateScreenForSoundStatus
     );
-    this.sound = sound;
+
+    // let soundObj = new Audio.Sound();
+    // soundObj.loadAsync(file);
+    // this.sound = soundObj;
 
     this.setState({
       isLoading: false,
@@ -227,15 +247,28 @@ export default class Record extends React.Component {
     //   } else {
     //     this.sound.playAsync();
     //   }
-    //
-
-    const soundObject = new Audio.Sound();
+    // }
+    let fileUri = null;
+    let file = FileSystem.downloadAsync(
+      'http://192.168.0.111:5000/get_info/data1.mp3',
+      FileSystem.documentDirectory + 'data1.mp3'
+    ).then(({ uri }) => {
+      fileUri = uri;
+      console.log('Finished downloading to: ', uri);
+    });
+    // let soundObj = new Audio.Sound();
+    // soundObj.loadAsync(FileSystem.documentDirectory + 'data1.mp3');
+    // soundObj.playAsync();
+    let playbackObject = null;
     try {
-      await soundObject.loadAsync(require('../assets/audio/result2.mp3'));
-      await soundObject.playAsync();
-    } catch (error) {
-      console.log(error);
+      playbackObject = Audio.Sound.createAsync(
+        { uri: 'http://192.168.0.111:5000/get_info/data1.mp3' },
+        { shouldPlay: true }
+      );
+    } catch (err) {
+      console.log(err);
     }
+    playbackObject.playAsync();
   };
 
   _onStopPressed = () => {

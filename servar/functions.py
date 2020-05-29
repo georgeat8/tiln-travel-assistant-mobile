@@ -47,7 +47,7 @@ def login(email, password, cursor, con):
         """
         try:
             payload = {
-                'exp': dt.datetime.utcnow() + dt.timedelta(days=1),
+                'exp': dt.datetime.utcnow() + dt.timedelta(days=30),
                 'iat': dt.datetime.utcnow(),
                 'sub': data[0][0]
             }
@@ -109,7 +109,7 @@ def exit_handler(cursor, con):
 
 def convert_mp3_to_wav(path, name):
     location = os.path.join(os.path.abspath('.'), "Uploads", name+".mp3")
-    sound = AudioSegment.from_mp3(location)
+    sound = AudioSegment.from_file(location, format="m4a")
     dest = "{}/{}.wav".format(path, name)
     sound.export(dest, format="wav")
 
@@ -245,6 +245,7 @@ def create_phrase(data, locatie):
 def generate_answer(path, name, uid, cursor):
     convert_mp3_to_wav(path, name)
     text = get_text_from_audio(path, name)
+    print(text)
     parsed_phrase = parse_phrase(text)
 
     text_parse = copy.deepcopy(parsed_phrase)
@@ -304,26 +305,37 @@ def replace(phrase):
 
 
 def response_to_location_request(request, cursor):
+    print("Entere function")
+    print("Request files are: ")
+    print(request.files)
     if 'file' not in request.files:
+        print("Entered 1")
         return {"message": "faile",
                 "error": "No file"}
     file = request.files['file']
+    print("Entered 2")
     # if user does not select file, browser also
     # submit an empty part without filename
     if file.filename == '':
+        print("Entered 3")
         return {"message": "faile",
                 "error": "No name"}
     if file:
+        print("File entered 4")
         filename = secure_filename(file.filename)
+        print(filename)
         path_of_save = os.path.join(
             "./Uploads")
         print(request.headers)
         uid = decode(request.headers["Authorization"])
+        print(uid)
         name = "data{}".format(uid)
+        print(name)
         file.save(os.path.join(path_of_save, name+".mp3"))
         path_of_result = generate_answer(path_of_save, name, uid, cursor)
-
+        print("Before try server")
         try:
             return send_from_directory(path_of_save, filename=name+".mp3", as_attachment=True)
         except FileNotFoundError:
+            print("Not working")
             abort(404)
